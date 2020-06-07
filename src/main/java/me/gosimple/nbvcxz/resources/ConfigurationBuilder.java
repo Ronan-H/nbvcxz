@@ -85,17 +85,17 @@ public class ConfigurationBuilder
         defaultLeetTable.put("vv", new String[]{"w"});
         defaultLeetTable.put("2u", new String[]{"w"});
         defaultLeetTable.put("2v", new String[]{"w"});
-        defaultLeetTable.put("\\/\\/", new String[]{"w"});
         defaultLeetTable.put("nn", new String[]{"m"});
         defaultLeetTable.put("2n", new String[]{"m"});
+        defaultLeetTable.put("2b", new String[]{"bb"});
+        defaultLeetTable.put("2d", new String[]{"dd"});
+        defaultLeetTable.put("2g", new String[]{"gg"});
+        defaultLeetTable.put("2l", new String[]{"ll"});
+        defaultLeetTable.put("2p", new String[]{"pp"});
+        defaultLeetTable.put("2t", new String[]{"tt"});
+        defaultLeetTable.put("\\/\\/", new String[]{"w"});
         defaultLeetTable.put("/\\/\\", new String[]{"m"});
-        // 2a = aa, 2b = bb, ... 2z = zz
-        for (char c = 'a'; c <= 'z'; c++) {
-            defaultLeetTable.put(
-                    new String(new char[]{'2', c}),
-                    new String[] {new String(new char[]{c, c})}
-            );
-        }
+        defaultLeetTable.put("|)", new String[]{"d"});
     }
 
     private List<PasswordMatcher> passwordMatchers;

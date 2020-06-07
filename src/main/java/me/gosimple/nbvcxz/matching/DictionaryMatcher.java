@@ -5,10 +5,8 @@ import me.gosimple.nbvcxz.matching.match.Match;
 import me.gosimple.nbvcxz.resources.Configuration;
 import me.gosimple.nbvcxz.resources.Dictionary;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Look for every part of the password that match an entry in our dictionaries
@@ -26,38 +24,63 @@ public final class DictionaryMatcher implements PasswordMatcher
      */
     private static List<String> translateLeet(final Configuration configuration, final String password)
     {
-        System.out.println("TRANSLATE LEET: " + password);
+        //System.out.println("TRANSLATE LEET: " + password);
+        String splitRegex = "((?<=\\Q%s\\E)|(?=\\Q%s\\E))";
+        Map<String, String[]> leetTable = configuration.getLeetTable();
+        // start by finding the longest munged string in the table
+        int longest = -1;
+        for (String k : leetTable.keySet()) {
+            longest = Math.max(k.length(), longest);
+        }
+        List<String[]> parts = new LinkedList<>();
+        parts.add(new String[] {password});
 
-        final List<String> translations = new ArrayList<>();
-        // replacements from a pair of indexes (from...to, may be the same index) with a character
-        final List<SubReplacements> replacements = new ArrayList<>();
-        String[] leetKeys = configuration.getLeetTable().keySet().toArray(new String[0]);
-
-        for (String leetKey : leetKeys) {
-            for (int i = 0; i < password.length() - leetKey.length() + 1; i++)
-            {
-                int start = i;
-                int end = start + leetKey.length();
-                String sub = password.substring(start, end);
-                if (sub.equals(leetKey)) {
-                    SubReplacements subReplacements = new SubReplacements(start, end, configuration.getLeetTable().get(leetKey));
-                    replacements.add(subReplacements);
-
-                    System.out.println(sub + " can be replaced with...");
-                    for (String rep : subReplacements.getReplacements()) {
-                        System.out.println("REP: " + rep);
+        // for each length of leet table key, largest to smallest
+        // (2n -> nn takes precedence over 2n -> zn, for example)
+        for (int len = longest; len >= 1; len--) {
+            // for each leet key of that length (TODO: optimize this; separate table for each key length, or sort)
+            for (String leetKey : leetTable.keySet()) {
+                if (leetKey.length() == len) {
+                    // found a leet key matching this length
+                    for (int i = 0; i < parts.size(); i++) {
+                        if (parts.get(i).length == 1) {
+                            // split password segment by the leet key
+                            String[] splitParts = parts.get(i)[0].split(String.format(splitRegex, leetKey, leetKey));
+                            parts.remove(i);
+                            for (int j = 0; j < splitParts.length; j++) {
+                                String sp = splitParts[j];
+                                if (sp.equals(leetKey)) {
+                                    // TODO: bug here, leet translations can get subsituted again (possible infinite loop too?)
+                                    parts.add(i + j, leetTable.get(sp));
+                                }
+                                else {
+                                    parts.add(i + j, new String[] {sp});
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Do not bother continuing if we're going to replace every single character
-        if(replacements.size() == password.length())
-            return translations;
+        //System.out.println("Printing parts:");
+        for (String[] part : parts) {
+            for (String p : part) {
+                System.out.print(p);
+                //System.out.print(", ");
+            }
+            //System.out.println();
+        }
 
-        if (replacements.size() > 0)
+        final List<String> translations = new ArrayList<>();
+
+        // Do not bother continuing if we're going to replace every single character
+//        if(replacements.size() == password.length())
+//            return translations;
+
+        if (parts.size() > 1)
         {
-            replaceAtIndex(replacements, 0, 0, new StringBuilder(password), translations);
+            replaceAtIndex(parts, 0, new int[parts.size()], translations);
         }
 
         return translations;
@@ -68,40 +91,34 @@ public final class DictionaryMatcher implements PasswordMatcher
      *
      * @param replacements    TreeMap of replacement index, and the possible characters at that index to be replaced
      * @param current_index   internal use for the function
-     * @param password        a Character array of the original password
+     * @param usingIndexes     indexes of the leet table to use to build the next password
      * @param final_passwords List of the final passwords to be filled
      */
-    private static void replaceAtIndex(final List<SubReplacements> replacements, int current_index, int repOffset, StringBuilder password, final List<String> final_passwords)
+    private static void replaceAtIndex(final List<String[]> replacements, int current_index, int[] usingIndexes, final List<String> final_passwords)
     {
         if (current_index >= replacements.size()) {
+            // build the password, using the current index permutation
+            StringBuilder passwordBuilder = new StringBuilder();
+            for (int i = 0; i < replacements.size(); i++) {
+                passwordBuilder.append(replacements.get(i)[usingIndexes[i]]);
+            }
+
+            final_passwords.add(passwordBuilder.toString());
+            //System.out.println("PERM: " + passwordBuilder.toString());
             return;
         }
 
-        SubReplacements rep = replacements.get(current_index);
-        int fromIndex = rep.getFromIndex() - repOffset;
-        int toIndex = rep.getToIndex() - repOffset;
-
-        for (final String stringRep : rep.getReplacements())
+        for (int i = 0; i < replacements.get(current_index).length; i++)
         {
-            String old = password.toString();
-            password.delete(fromIndex, toIndex);
-            repOffset += rep.getSubLength() - stringRep.length();
-            password.insert(fromIndex, stringRep);
-
-            final_passwords.add(new String(password));
-            //System.out.println("Perm: " + password);
-
-            if (final_passwords.size() > 100)
+            if (final_passwords.size() <= 100)
             {
+                usingIndexes[current_index] = i;
+                replaceAtIndex(replacements, current_index + 1, usingIndexes, final_passwords);
+            }
+            else {
                 // Give up if we've already made 100 replacements
                 return;
             }
-            else
-            {
-                replaceAtIndex(replacements, current_index + 1, repOffset, password, final_passwords);
-            }
-
-            password = new StringBuilder(old);
         }
     }
 
@@ -423,33 +440,5 @@ public final class DictionaryMatcher implements PasswordMatcher
         }
         // Return all the matches
         return matches;
-    }
-}
-
-class SubReplacements {
-    private int fromIndex;
-    private int toIndex;
-    private String[] replacements;
-
-    public SubReplacements(int fromIndex, int toIndex, String[] replacements) {
-        this.fromIndex = fromIndex;
-        this.toIndex = toIndex;
-        this.replacements = replacements;
-    }
-
-    public int getFromIndex() {
-        return fromIndex;
-    }
-
-    public int getToIndex() {
-        return toIndex;
-    }
-
-    public int getSubLength() {
-        return toIndex - fromIndex + 1;
-    }
-
-    public String[] getReplacements() {
-        return replacements;
     }
 }
