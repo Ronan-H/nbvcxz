@@ -33,7 +33,7 @@ public class ConfigurationBuilder
     private static final List<Dictionary> defaultDictionaries = new ArrayList<>();
     private static final List<PasswordMatcher> defaultPasswordMatchers = new ArrayList<>();
     private static final List<AdjacencyGraph> defaultAdjacencyGraphs = new ArrayList<>();
-    private static final Map<Character, Character[]> defaultLeetTable = new HashMap<>();
+    private static final Map<String, String[]> defaultLeetTable = new HashMap<>();
     
     static 
     {
@@ -56,35 +56,53 @@ public class ConfigurationBuilder
         defaultAdjacencyGraphs.add(new AdjacencyGraph("Standard Keypad", AdjacencyGraphUtil.standardKeypad));
         defaultAdjacencyGraphs.add(new AdjacencyGraph("Mac Keypad", AdjacencyGraphUtil.macKeypad));
 
-        defaultLeetTable.put('4', new Character[]{'a'});
-        defaultLeetTable.put('@', new Character[]{'a'});
-        defaultLeetTable.put('8', new Character[]{'b'});
-        defaultLeetTable.put('(', new Character[]{'c'});
-        defaultLeetTable.put('{', new Character[]{'c'});
-        defaultLeetTable.put('[', new Character[]{'c'});
-        defaultLeetTable.put('<', new Character[]{'c'});
-        defaultLeetTable.put('3', new Character[]{'e'});
-        defaultLeetTable.put('9', new Character[]{'g'});
-        defaultLeetTable.put('6', new Character[]{'g'});
-        defaultLeetTable.put('&', new Character[]{'g'});
-        defaultLeetTable.put('#', new Character[]{'h'});
-        defaultLeetTable.put('!', new Character[]{'i', 'l'});
-        defaultLeetTable.put('1', new Character[]{'i', 'l'});
-        defaultLeetTable.put('|', new Character[]{'i', 'l'});
-        defaultLeetTable.put('0', new Character[]{'o'});
-        defaultLeetTable.put('$', new Character[]{'s'});
-        defaultLeetTable.put('5', new Character[]{'s'});
-        defaultLeetTable.put('+', new Character[]{'t'});
-        defaultLeetTable.put('7', new Character[]{'t', 'l'});
-        defaultLeetTable.put('%', new Character[]{'x'});
-        defaultLeetTable.put('2', new Character[]{'z'});
+        defaultLeetTable.put("4", new String[]{"a"});
+        defaultLeetTable.put("@", new String[]{"a"});
+        defaultLeetTable.put("8", new String[]{"b"});
+        defaultLeetTable.put("(", new String[]{"c"});
+        defaultLeetTable.put("{", new String[]{"c"});
+        defaultLeetTable.put("[", new String[]{"c"});
+        defaultLeetTable.put("<", new String[]{"c", "k", "v"});
+        defaultLeetTable.put(">", new String[]{"v"});
+        defaultLeetTable.put("3", new String[]{"e"});
+        defaultLeetTable.put("9", new String[]{"g", "q"});
+        defaultLeetTable.put("6", new String[]{"d", "g"});
+        defaultLeetTable.put("&", new String[]{"g"});
+        defaultLeetTable.put("#", new String[]{"f", "h"});
+        defaultLeetTable.put("!", new String[]{"i", "l"});
+        defaultLeetTable.put("1", new String[]{"i", "l"});
+        defaultLeetTable.put("|", new String[]{"i", "l"});
+        defaultLeetTable.put("0", new String[]{"o"});
+        defaultLeetTable.put("$", new String[]{"s"});
+        defaultLeetTable.put("5", new String[]{"s"});
+        defaultLeetTable.put("+", new String[]{"t"});
+        defaultLeetTable.put("7", new String[]{"t", "l"});
+        defaultLeetTable.put("%", new String[]{"x"});
+        defaultLeetTable.put("y", new String[]{"y"});
+        defaultLeetTable.put("2", new String[]{"z"});
+        // extra "munged" variations from here: https://en.wikipedia.org/wiki/Munged_password
+        defaultLeetTable.put("uu", new String[]{"w"});
+        defaultLeetTable.put("vv", new String[]{"w"});
+        defaultLeetTable.put("2u", new String[]{"w"});
+        defaultLeetTable.put("2v", new String[]{"w"});
+        defaultLeetTable.put("\\/\\/", new String[]{"w"});
+        defaultLeetTable.put("nn", new String[]{"m"});
+        defaultLeetTable.put("2n", new String[]{"m"});
+        defaultLeetTable.put("/\\/\\", new String[]{"m"});
+        // 2a = aa, 2b = bb, ... 2z = zz
+        for (char c = 'a'; c <= 'z'; c++) {
+            defaultLeetTable.put(
+                    new String(new char[]{'2', c}),
+                    new String[] {new String(new char[]{c, c})}
+            );
+        }
     }
 
     private List<PasswordMatcher> passwordMatchers;
     private Map<String, Long> guessTypes;
     private List<Dictionary> dictionaries;
     private List<AdjacencyGraph> adjacencyGraphs;
-    private Map<Character, Character[]> leetTable;
+    private Map<String, String[]> leetTable;
     private Pattern yearPattern;
     private Double minimumEntropy;
     private Locale locale;
@@ -179,7 +197,7 @@ public class ConfigurationBuilder
     /**
      * @return The default table of common english leet substitutions
      */
-    public static Map<Character, Character[]> getDefaultLeetTable()
+    public static Map<String, String[]> getDefaultLeetTable()
     {
         return defaultLeetTable;
     }
@@ -282,7 +300,7 @@ public class ConfigurationBuilder
      * @param leetTable Map for leetTable
      * @return Builder
      */
-    public ConfigurationBuilder setLeetTable(Map<Character, Character[]> leetTable)
+    public ConfigurationBuilder setLeetTable(Map<String, String[]> leetTable)
     {
         this.leetTable = leetTable;
         return this;

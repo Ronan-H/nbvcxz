@@ -26,30 +26,38 @@ public final class DictionaryMatcher implements PasswordMatcher
      */
     private static List<String> translateLeet(final Configuration configuration, final String password)
     {
-        final List<String> translations = new ArrayList();
-        final TreeMap<Integer, Character[]> replacements = new TreeMap<>();
+        System.out.println("TRANSLATE LEET: " + password);
 
-        for (int i = 0; i < password.length(); i++)
-        {
-            final Character[] replacement = configuration.getLeetTable().get(password.charAt(i));
-            if (replacement != null)
+        final List<String> translations = new ArrayList<>();
+        // replacements from a pair of indexes (from...to, may be the same index) with a character
+        final List<SubReplacements> replacements = new ArrayList<>();
+        String[] leetKeys = configuration.getLeetTable().keySet().toArray(new String[0]);
+
+        for (String leetKey : leetKeys) {
+            for (int i = 0; i < password.length() - leetKey.length() + 1; i++)
             {
-                replacements.put(i, replacement);
+                int start = i;
+                int end = start + leetKey.length();
+                String sub = password.substring(start, end);
+                if (sub.equals(leetKey)) {
+                    SubReplacements subReplacements = new SubReplacements(start, end, configuration.getLeetTable().get(leetKey));
+                    replacements.add(subReplacements);
+
+                    System.out.println(sub + " can be replaced with...");
+                    for (String rep : subReplacements.getReplacements()) {
+                        System.out.println("REP: " + rep);
+                    }
+                }
             }
         }
 
         // Do not bother continuing if we're going to replace every single character
-        if(replacements.keySet().size() == password.length())
+        if(replacements.size() == password.length())
             return translations;
 
         if (replacements.size() > 0)
         {
-            final char[] password_char = new char[password.length()];
-            for (int i = 0; i < password.length(); i++)
-            {
-                password_char[i] = password.charAt(i);
-            }
-            replaceAtIndex(replacements, replacements.firstKey(), password_char, translations);
+            replaceAtIndex(replacements, 0, 0, new StringBuilder(password), translations);
         }
 
         return translations;
@@ -63,24 +71,37 @@ public final class DictionaryMatcher implements PasswordMatcher
      * @param password        a Character array of the original password
      * @param final_passwords List of the final passwords to be filled
      */
-    private static void replaceAtIndex(final TreeMap<Integer, Character[]> replacements, Integer current_index, final char[] password, final List<String> final_passwords)
+    private static void replaceAtIndex(final List<SubReplacements> replacements, int current_index, int repOffset, StringBuilder password, final List<String> final_passwords)
     {
-        for (final char replacement : replacements.get(current_index))
+        if (current_index >= replacements.size()) {
+            return;
+        }
+
+        SubReplacements rep = replacements.get(current_index);
+        int fromIndex = rep.getFromIndex() - repOffset;
+        int toIndex = rep.getToIndex() - repOffset;
+
+        for (final String stringRep : rep.getReplacements())
         {
-            password[current_index] = replacement;
-            if (current_index.equals(replacements.lastKey()))
-            {
-                final_passwords.add(new String(password));
-            }
-            else if (final_passwords.size() > 100)
+            String old = password.toString();
+            password.delete(fromIndex, toIndex);
+            repOffset += rep.getSubLength() - stringRep.length();
+            password.insert(fromIndex, stringRep);
+
+            final_passwords.add(new String(password));
+            //System.out.println("Perm: " + password);
+
+            if (final_passwords.size() > 100)
             {
                 // Give up if we've already made 100 replacements
                 return;
             }
             else
             {
-                replaceAtIndex(replacements, replacements.higherKey(current_index), password, final_passwords);
+                replaceAtIndex(replacements, current_index + 1, repOffset, password, final_passwords);
             }
+
+            password = new StringBuilder(old);
         }
     }
 
@@ -402,5 +423,33 @@ public final class DictionaryMatcher implements PasswordMatcher
         }
         // Return all the matches
         return matches;
+    }
+}
+
+class SubReplacements {
+    private int fromIndex;
+    private int toIndex;
+    private String[] replacements;
+
+    public SubReplacements(int fromIndex, int toIndex, String[] replacements) {
+        this.fromIndex = fromIndex;
+        this.toIndex = toIndex;
+        this.replacements = replacements;
+    }
+
+    public int getFromIndex() {
+        return fromIndex;
+    }
+
+    public int getToIndex() {
+        return toIndex;
+    }
+
+    public int getSubLength() {
+        return toIndex - fromIndex + 1;
+    }
+
+    public String[] getReplacements() {
+        return replacements;
     }
 }
