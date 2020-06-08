@@ -18,7 +18,7 @@ public class MungeTable {
         regexPatterns = new HashMap<>();
     }
 
-    public MungeTable add(String key, String[] subs) {
+    public MungeTable addSub(String key, String...subs) {
         table.put(key, subs);
         keys.add(key);
         regexPatterns.put(key, Pattern.compile(String.format(splitRegex, key, key)));

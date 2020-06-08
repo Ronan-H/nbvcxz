@@ -26,7 +26,7 @@ public class ConfigurationBuilder
     private static final List<Dictionary> defaultDictionaries = new ArrayList<>();
     private static final List<PasswordMatcher> defaultPasswordMatchers = new ArrayList<>();
     private static final List<AdjacencyGraph> defaultAdjacencyGraphs = new ArrayList<>();
-    private static final MungeTable defaultLeetTable = new MungeTable();
+    private static final MungeTable defaultMungeTable = new MungeTable();
     
     static 
     {
@@ -49,48 +49,48 @@ public class ConfigurationBuilder
         defaultAdjacencyGraphs.add(new AdjacencyGraph("Standard Keypad", AdjacencyGraphUtil.standardKeypad));
         defaultAdjacencyGraphs.add(new AdjacencyGraph("Mac Keypad", AdjacencyGraphUtil.macKeypad));
 
-        defaultLeetTable
-            .add("4", new String[]{"a"})
-            .add("@", new String[]{"a"})
-            .add("8", new String[]{"b"})
-            .add("(", new String[]{"c"})
-            .add("{", new String[]{"c"})
-            .add("[", new String[]{"c"})
-            .add("<", new String[]{"c", "k", "v"})
-            .add(">", new String[]{"v"})
-            .add("3", new String[]{"e"})
-            .add("9", new String[]{"g", "q"})
-            .add("6", new String[]{"d", "g"})
-            .add("&", new String[]{"g"})
-            .add("#", new String[]{"f", "h"})
-            .add("!", new String[]{"i", "l"})
-            .add("1", new String[]{"i", "l"})
-            .add("|", new String[]{"i", "l"})
-            .add("0", new String[]{"o"})
-            .add("$", new String[]{"s"})
-            .add("5", new String[]{"s"})
-            .add("+", new String[]{"t"})
-            .add("7", new String[]{"t", "l"})
-            .add("%", new String[]{"x"})
-            .add("y", new String[]{"y"})
-            .add("2", new String[]{"z"})
+        defaultMungeTable
+            // simple single character substitutions (mostly leet speak)
+            .addSub("4", "a")
+            .addSub("@", "a")
+            .addSub("8", "b")
+            .addSub("(", "c")
+            .addSub("{", "c")
+            .addSub("[", "c")
+            .addSub("<", "c", "k", "v")
+            .addSub(">", "v")
+            .addSub("3", "e")
+            .addSub("9", "g", "q")
+            .addSub("6", "d", "g")
+            .addSub("&", "g")
+            .addSub("#", "f", "h")
+            .addSub("!", "i", "l")
+            .addSub("1", "i", "l")
+            .addSub("|", "i", "l")
+            .addSub("0", "o")
+            .addSub("$", "s")
+            .addSub("5", "s")
+            .addSub("+", "t")
+            .addSub("7", "t", "l")
+            .addSub("%", "x")
+            .addSub("2", "z")
             // extra "munged" variations from here: https://en.wikipedia.org/wiki/Munged_password
-            .add("?", new String[]{"y"})
-            .add("uu", new String[]{"w"})
-            .add("vv", new String[]{"w"})
-            .add("2u", new String[]{"w"})
-            .add("2v", new String[]{"w"})
-            .add("nn", new String[]{"m"})
-            .add("2n", new String[]{"m"})
-            .add("2b", new String[]{"bb"})
-            .add("2d", new String[]{"dd"})
-            .add("2g", new String[]{"gg"})
-            .add("2l", new String[]{"ll"})
-            .add("2p", new String[]{"pp"})
-            .add("2t", new String[]{"tt"})
-            .add("\\/\\/", new String[]{"w"})
-            .add("/\\/\\", new String[]{"m"})
-            .add("|)", new String[]{"d"})
+            .addSub("?", "y") // (y = why?)
+            .addSub("uu", "w")
+            .addSub("vv", "w")
+            .addSub("nn", "m")
+            .addSub("2u", "uu", "w")
+            .addSub("2v", "vv", "w")
+            .addSub("2n", "nn", "m")
+            .addSub("2b", "bb")
+            .addSub("2d", "dd")
+            .addSub("2g", "gg")
+            .addSub("2l", "ll")
+            .addSub("2p", "pp")
+            .addSub("2t", "tt")
+            .addSub("\\/\\/", "w")
+            .addSub("/\\/\\", "m")
+            .addSub("|)", "d")
             .sort();
     }
 
@@ -193,9 +193,9 @@ public class ConfigurationBuilder
     /**
      * @return The default table of common english leet substitutions
      */
-    public static MungeTable getDefaultLeetTable()
+    public static MungeTable getDefaultMungeTable()
     {
-        return defaultLeetTable;
+        return defaultMungeTable;
     }
 
     /**
@@ -433,7 +433,7 @@ public class ConfigurationBuilder
         }
         if (leetTable == null)
         {
-            leetTable = getDefaultLeetTable();
+            leetTable = getDefaultMungeTable();
         }
         if (yearPattern == null)
         {

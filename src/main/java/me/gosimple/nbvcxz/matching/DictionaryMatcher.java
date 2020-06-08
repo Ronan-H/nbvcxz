@@ -6,7 +6,6 @@ import me.gosimple.nbvcxz.resources.Configuration;
 import me.gosimple.nbvcxz.resources.Dictionary;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Look for every part of the password that match an entry in our dictionaries
@@ -25,14 +24,12 @@ public final class DictionaryMatcher implements PasswordMatcher
     private static List<String> translateLeet(final Configuration configuration, final String password)
     {
         //System.out.println("TRANSLATE LEET: " + password);
-        String splitRegex = "((?<=\\Q%s\\E)|(?=\\Q%s\\E))";
-        MungeTable leetTable = configuration.getLeetTable();
+        MungeTable leetTable = configuration.getMungeTable();
         List<String[]> parts = new LinkedList<>();
         parts.add(new String[] {password});
 
         // for each munge key (sorted largest to smallest)
         for (String mungeKey : leetTable.getKeys()) {
-            // found a leet key matching this length
             for (int i = 0; i < parts.size(); i++) {
                 if (parts.get(i).length == 1) {
                     // split password segment by the leet key
