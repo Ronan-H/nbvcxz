@@ -210,6 +210,8 @@ public class DictionaryMatcherTest
         mappings.put("/\\/\\3G4", "mega"); // /\/\ = m
         mappings.put("|)R!2b|3", "dribble"); // |) = D, 2b = bb
         mappings.put("/\\/\\02!2l4", "mozilla"); // /\/\02!2l4 (2l = l)
+        mappings.put("so2n3", "some"); // 2n could mean nn or m, make sure 'm' is used
+        mappings.put("pe2n", "penn"); // same as above, but expecting 2n = nn
 
         for (String munged : mappings.keySet()) {
             // make a list of all the dictionary matches that were made,
