@@ -26,37 +26,26 @@ public final class DictionaryMatcher implements PasswordMatcher
     {
         //System.out.println("TRANSLATE LEET: " + password);
         String splitRegex = "((?<=\\Q%s\\E)|(?=\\Q%s\\E))";
-        Map<String, String[]> leetTable = configuration.getLeetTable();
-        // start by finding the longest munged string in the table
-        int longest = -1;
-        for (String k : leetTable.keySet()) {
-            longest = Math.max(k.length(), longest);
-        }
+        MungeTable leetTable = configuration.getLeetTable();
         List<String[]> parts = new LinkedList<>();
         parts.add(new String[] {password});
 
-        // for each length of leet table key, largest to smallest
-        // (2n -> nn takes precedence over 2n -> zn, for example)
-        for (int len = longest; len >= 1; len--) {
-            // for each leet key of that length (TODO: optimize this; separate table for each key length, or sort)
-            for (String leetKey : leetTable.keySet()) {
-                if (leetKey.length() == len) {
-                    // found a leet key matching this length
-                    for (int i = 0; i < parts.size(); i++) {
-                        if (parts.get(i).length == 1) {
-                            // split password segment by the leet key
-                            String[] splitParts = parts.get(i)[0].split(String.format(splitRegex, leetKey, leetKey));
-                            parts.remove(i);
-                            for (int j = 0; j < splitParts.length; j++) {
-                                String sp = splitParts[j];
-                                if (sp.equals(leetKey)) {
-                                    // TODO: bug here, leet translations can get subsituted again (possible infinite loop too?)
-                                    parts.add(i + j, leetTable.get(sp));
-                                }
-                                else {
-                                    parts.add(i + j, new String[] {sp});
-                                }
-                            }
+        // for each munge key (sorted largest to smallest)
+        for (String mungeKey : leetTable.getKeys()) {
+            // found a leet key matching this length
+            for (int i = 0; i < parts.size(); i++) {
+                if (parts.get(i).length == 1) {
+                    // split password segment by the leet key
+                    String[] splitParts = leetTable.getKeyPattern(mungeKey).split(parts.get(i)[0]);
+                    parts.remove(i);
+                    for (int j = 0; j < splitParts.length; j++) {
+                        String sp = splitParts[j];
+                        if (sp.equals(mungeKey)) {
+                            // TODO: bug here, leet translations can get substituted again (possible infinite loop too?)
+                            parts.add(i + j, leetTable.getSubs(mungeKey));
+                        }
+                        else {
+                            parts.add(i + j, new String[] {sp});
                         }
                     }
                 }
@@ -66,7 +55,7 @@ public final class DictionaryMatcher implements PasswordMatcher
         //System.out.println("Printing parts:");
         for (String[] part : parts) {
             for (String p : part) {
-                System.out.print(p);
+                //System.out.print(p);
                 //System.out.print(", ");
             }
             //System.out.println();

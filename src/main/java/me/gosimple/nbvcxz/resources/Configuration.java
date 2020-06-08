@@ -1,9 +1,6 @@
 package me.gosimple.nbvcxz.resources;
 
-import me.gosimple.nbvcxz.matching.DictionaryMatcher;
-import me.gosimple.nbvcxz.matching.PasswordMatcher;
-import me.gosimple.nbvcxz.matching.SpacialMatcher;
-import me.gosimple.nbvcxz.matching.YearMatcher;
+import me.gosimple.nbvcxz.matching.*;
 
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +19,7 @@ public class Configuration
     private final Map<String, Long> guessTypes;
     private final List<Dictionary> dictionaries;
     private final List<AdjacencyGraph> adjacencyGraphs;
-    private final Map<String, String[]> leetTable;
+    private final MungeTable leetTable;
     private final Pattern yearPattern;
     private final Double minimumEntropy;
     private final Locale locale;
@@ -43,7 +40,7 @@ public class Configuration
      * @param distanceCalc                Enable or disable levenshtein distance calculation for dictionary matches
      * @param combinationAlgorithmTimeout Timeout for the findBestMatches algorithm
      */
-    public Configuration(List<PasswordMatcher> passwordMatchers, Map<String, Long> guessTypes, List<Dictionary> dictionaries, List<AdjacencyGraph> adjacencyGraphs, Map<String, String[]> leetTable, Pattern yearPattern, Double minimumEntropy, Locale locale, boolean distanceCalc, long combinationAlgorithmTimeout)
+    public Configuration(List<PasswordMatcher> passwordMatchers, Map<String, Long> guessTypes, List<Dictionary> dictionaries, List<AdjacencyGraph> adjacencyGraphs, MungeTable leetTable, Pattern yearPattern, Double minimumEntropy, Locale locale, boolean distanceCalc, long combinationAlgorithmTimeout)
     {
         this.passwordMatchers = passwordMatchers;
         this.guessTypes = guessTypes;
@@ -94,7 +91,7 @@ public class Configuration
     /**
      * @return Leet table for use with {@link DictionaryMatcher}
      */
-    public Map<String, String[]> getLeetTable()
+    public MungeTable getLeetTable()
     {
         return leetTable;
     }
